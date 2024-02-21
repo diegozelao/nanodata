@@ -18,7 +18,7 @@ function XmlModal(props: XmlModalProps) {
   function handleSubmit() {
     const filesXml = files
     
-    console.log(files )
+    console.log(files, filesXml )
   }
   
   function hideFn() {
@@ -27,9 +27,11 @@ function XmlModal(props: XmlModalProps) {
     return props.onHide()
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function handlerChange(e: any) {
     const files = e.target.files
-    const attFiles: { name: string; }[] = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const attFiles: any = []
 
     for (let i = 0; i < files.length; i++) {
       attFiles.push(files[i].name)
@@ -46,6 +48,7 @@ function XmlModal(props: XmlModalProps) {
     }else {
       setInputFiles(true)
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setArqFiles(attFiles)
     setFiles(e.target.files)
   }
