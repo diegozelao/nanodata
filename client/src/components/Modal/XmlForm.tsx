@@ -1,7 +1,7 @@
 import { Button, Card, Form } from 'react-bootstrap';
 import Modal from 'react-bootstrap/Modal';
 import { useState } from 'react';
-
+import { xmlInstance } from '../../services/apiInstance';
 
 type XmlModalProps = {
   show: boolean,
@@ -17,8 +17,20 @@ function XmlModal(props: XmlModalProps) {
   const [error, setError] = useState(false)
   function handleSubmit() {
     const filesXml = files
+
+    const fd = new FormData()
+    for (let i = 0; i < filesXml.length; i++) {
+      fd.append('files', filesXml[i])
+    }
     
-    console.log(files, filesXml )
+    // axios.post('http://localhost:8080/xml2', fd)
+    xmlInstance.post('/xml2', fd)
+    .then((response) => {
+      console.log(response.data)
+      setInputFiles(false)
+    }).catch((error) => {
+      console.log(error)
+    })
   }
   
   function hideFn() {
