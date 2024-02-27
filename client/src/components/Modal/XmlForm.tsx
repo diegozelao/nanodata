@@ -24,7 +24,7 @@ function XmlModal(props: XmlModalProps) {
     }
     
     // axios.post('http://localhost:8080/xml2', fd)
-    xmlInstance.post('/xml2', fd)
+    xmlInstance.post('/xml', fd)
     .then((response) => {
       console.log(response.data)
       setInputFiles(false)
