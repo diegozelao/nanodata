@@ -1,102 +1,121 @@
 package com.example.server;
 
+import com.example.server.domain.xml.NotaFiscal;
+import com.example.server.domain.xml.NotaFiscalRepository;
+import com.example.server.domain.xml.XmlInfo;
+import com.example.server.domain.xml.XmlInfoRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.Entity;
 import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.json.JSONParser;
 import org.dom4j.*;
 import org.dom4j.io.SAXReader;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.json.JsonParser;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
+import javax.xml.xpath.XPath;
 import java.beans.XMLDecoder;
 import java.io.*;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Timestamp;
+import java.util.*;
+
 import java.util.logging.XMLFormatter;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 public class ApiController {
 
+    @Autowired
+    private NotaFiscalRepository repository;
+
+    @Autowired
+    private XmlInfoRepository repositoryXml;
     @GetMapping("/")
-    public String index() {
-        return "Hello World";
-    }
-
-
-    @PostMapping(value = "/data", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public String processData(@RequestBody String jsonData) {
-        // Processe o JSON recebido
-        // ...
-        return jsonData; // Retorne o JSON original para este exemplo
+    public ResponseEntity getAllNotaFiscal() {
+        return ResponseEntity.ok("ok");
     }
 
     @PostMapping(value = "/xml", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public String processXml(@RequestParam("files") List<MultipartFile> files) throws IOException, DocumentException {
-        // Processe cada arquivo XML individualmente
+
         SAXReader reader = new SAXReader();
         for (MultipartFile file : files) {
-            // Transformar XML file ByteArr
             ByteArrayInputStream stream = new ByteArrayInputStream(file.getBytes());
             Document document = reader.read(stream);
-            Element root = document.getRootElement();
+            Element nfeProc = document.getRootElement();
+            Element NFe = nfeProc.element("NFe");
+            Element infNFe = NFe.element("infNFe");
+            Element ide = infNFe.element("ide");
+            Element dhEmi = ide.element("dhEmi");
+            Element nNF = ide.element("nNF");
+            Element cUF = ide.element("cUF");
+            Element emit = infNFe.element("emit");
+            Element emitCNPJ = emit.element("CNPJ");
+            Element emitxFant = emit.element("xFant");
+            Element dest = infNFe.element("dest");
+            Element destCNPJ = dest.element("CNPJ");
+            Element destxNome = dest.element("xNome");
+            Element total = infNFe.element("total");
+            Element ICMSTot = total.element("ICMSTot");
+            Element vTotTrib = ICMSTot.element("vTotTrib");
+            Element vNF = ICMSTot.element("vNF");
 
+            BigDecimal vTotTribBig = new BigDecimal(vTotTrib.getData().toString());
+            BigDecimal vNFBig = new BigDecimal(vNF.getData().toString());
 
+            String infNFeId = infNFe.attributeValue("Id");
+            String dhEmiVal = dhEmi.getData().toString();
+            String nNFVal = (String) nNF.getData();
+            String cUFVal = (String) cUF.getData();
+            String emitCNPJVal = (String) emitCNPJ.getData();
+            String emitxFantVal = (String) emitxFant.getData();
+            String destCNPJVal = (String) destCNPJ.getData();
+            String destxNomeVal = (String) destxNome.getData();
+            BigDecimal vTotTribVal = vTotTribBig;
+            BigDecimal vNFVal = vNFBig;
 
-
-            System.out.println("XML: " + root.attributeValue("versao"));
-
-            //GRAVAR NO BANCO O BINARIO DO XML
-
-            /* iterator caso nao for o XPath
-            public void bar(Document document) throws DocumentException {
-
-                Element root = document.getRootElement();
-
-                // iterate through child elements of root
-                for (Iterator<Element> it = root.elementIterator(); it.hasNext();) {
-                    Element element = it.next();
-                    // do something
-                }
-
-                // iterate through child elements of root with element name "foo"
-                for (Iterator<Element> it = root.elementIterator("foo"); it.hasNext();) {
-                    Element foo = it.next();
-                    // do something
-                }
-
-                // iterate through attributes of root
-                for (Iterator<Attribute> it = root.attributeIterator(); it.hasNext();) {
-                    Attribute attribute = it.next();
-                    // do something
-                }
+            NotaFiscal notaFiscal = new NotaFiscal(
+                infNFeId,
+                dhEmiVal,
+                nNFVal,
+                cUFVal,
+                emitCNPJVal,
+                emitxFantVal,
+                destCNPJVal,
+                destxNomeVal,
+                vTotTribVal,
+                vNFVal
+            );
+            try {
+                repository.save(notaFiscal);
+            } catch (Exception e) {
+                ResponseEntity<String> response = ResponseEntity.ok(e.getMessage());
+                return response.getBody();
             }
-            **/
-            //XPath xpath = (XPath) document.selectNodes("/root/element/text()");
-            //for (Node node : xpath) {
-                // Processe o texto de cada nó
-                // ...
-            //}
-
-            // Salve o arquivo XML
-            //Path path = Paths.get("/path/to/file_" + file.getOriginalFilename());
-            //Files.write(path, file.getBytes());
+            try {
+                repositoryXml.save(new XmlInfo(infNFeId, file.getBytes()));
+            } catch (Exception e) {
+                ResponseEntity<String> response = ResponseEntity.ok(e.getMessage());
+                return response.getBody();
+            }
         }
 
-        // Retorne uma resposta JSON
         ObjectMapper mapper = new ObjectMapper();
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "6 arquivos XML processados com sucesso!");
-        String json = mapper.writeValueAsString(response);
-        return json;
+        Map<String, String> jsonData = new HashMap<>();
+        jsonData.put("mensagem", "Arquivos XML processados com sucesso!");
+        jsonData.put("sucess", "true");
+        String jsonResponse = mapper.writeValueAsString(jsonData);
+        ResponseEntity<String> response = ResponseEntity.ok(jsonResponse);
+        return response.getBody();
     }
 
 }

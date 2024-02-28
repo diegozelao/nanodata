@@ -16,10 +16,11 @@ services:
     environment:
       - POSTGRES_USER=teste
       - POSTGRES_PASSWORD=teste
-      - POSTGRES_DB=teste
+      - POSTGRES_DB=nanodata
     ports:
       - '5432:5432'
     volumes:
+      - ./init.sql:/sql/init.sql
       - db_data:/var/lib/postgresql/data
     networks:
       - app-network
