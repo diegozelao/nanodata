@@ -15,8 +15,15 @@ function XmlModal(props: XmlModalProps) {
   const [arqFiles, setArqFiles] = useState([])
   const [inputFiles, setInputFiles] = useState(false)
   const [error, setError] = useState(false)
+  const [errorFile, setErrorFile] = useState(false)
+  const [errorTrace, setErrorTrace] = useState('')
   function handleSubmit() {
     const filesXml = files
+
+    if(files.length === 0){
+      setError(true)
+      return
+    }
 
     const fd = new FormData()
     for (let i = 0; i < filesXml.length; i++) {
@@ -27,9 +34,14 @@ function XmlModal(props: XmlModalProps) {
     xmlInstance.post('/xml', fd)
     .then((response) => {
       console.log(response.data)
-      setInputFiles(false)
-    }).catch((error) => {
-      console.log(error)
+      if(response.data.sucess !== "false") {
+        setInputFiles(false)
+        props.onHide()
+        window.location.reload();
+      }else {
+        setErrorFile(true)
+        setErrorTrace(response.data.mensagem)
+      }
     })
   }
   
@@ -67,6 +79,7 @@ function XmlModal(props: XmlModalProps) {
 
   return (
     <Modal
+      
       {...props}
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
@@ -93,10 +106,13 @@ function XmlModal(props: XmlModalProps) {
               </ul>
             }
           </Card.Body>
+          
+          {errorFile && <p style={{color: 'red'}}>{errorTrace}</p>}
         </Card>
       </Modal.Body>
       <Modal.Footer>
-        {!error &&<Button variant="primary" onClick={handleSubmit}>Enviar</Button>}
+        {errorFile && <p style={{color: 'red'}}>Erro ao Carregar Arquivos</p>}
+        <Button variant="primary" onClick={handleSubmit}>Enviar</Button>
         <Button variant="secondary" onClick={hideFn}>Fechar</Button>
       </Modal.Footer>
     </Modal>

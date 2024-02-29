@@ -1,10 +1,14 @@
 
 import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table"
 import { Container } from "react-bootstrap"
-import Mock from '../../utils/mock'
 import { useEffect, useMemo, useState } from "react"
 
+import { IoMdDownload } from "react-icons/io";
+import { IoCloudDownloadSharp } from "react-icons/io5";
+import { apiInstance } from "../../services/apiInstance";
+
 type DataNfe = {
+  infNFeId: string
   idedhEmi: string
   idenNF: number
   idecUF: number
@@ -19,24 +23,57 @@ type DataNfe = {
 function NotaFiscal() {
   const [dataNfe, setDataNfe] = useState<DataNfe[]>([])
 
-  const mock = Mock()
-
   useEffect(() => {
-    setDataNfe(mock)
+    apiInstance.get('notafiscal')
+    .then((response) => {
+      console.log(response.data)
+      setDataNfe(response.data)
+    }).catch((error) => {
+      console.log(error)
+    })
+    
   }, [])
+
+  function base64ToXml(base64String: string) {
+    const byteString = atob(base64String);
+    const buffer = new ArrayBuffer(byteString.length);
+    const view = new Uint8Array(buffer);
+    for (let i = 0; i < byteString.length; i++) {
+      view[i] = byteString.charCodeAt(i);
+    }
+    const xmlString = new TextDecoder().decode(buffer);
+    
+    return xmlString;
+  }
+  function stringToFileXml(xmlString: string, filename: string) {
+    const blob = new Blob([xmlString], { type: "text/xml" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+  function handleClick(nfeId: string) {
+    apiInstance.get(`xml/${nfeId}`)
+    .then((response) => {
+      const xmlDoc = base64ToXml(response.data.xml);
+      stringToFileXml(xmlDoc, `${nfeId}.xml`)
+    })
+  }
 
   const data: DataNfe[] = useMemo(() => dataNfe, [dataNfe])
   const columns =  [
     {
-      accessorKey: 'idedhEmi',
+      accessorKey: 'dhEmi',
       header: 'Data Emissão'
     },
     {
-      accessorKey: 'idenNF',
+      accessorKey: 'nnf',
       header: 'NF'
     },
     {
-      accessorKey: 'idecUF',
+      accessorKey: 'cuf',
       header: 'UF'
     },
     {
@@ -52,18 +89,17 @@ function NotaFiscal() {
       header: 'CNPJ Destinatario'
     },
     {
-      accessorKey: 'destxNome',
+      accessorKey: 'destxFant',
       header: 'Nome Destinatario'
     },
     {
-      accessorKey: 'totalICMSTotvTotTrib',
+      accessorKey: 'vtotTrib',
       header: 'Total Tributos'
     },
     {
-      accessorKey: 'totalICMSTotvNF',
+      accessorKey: 'vnf',
       header: 'Total NF',
-    }
-
+    },
   ]
 
   const options = {
@@ -86,6 +122,7 @@ function NotaFiscal() {
                   {flexRender(header.column.columnDef.header, header.getContext())}
                 </th>
               ))}
+              <th><IoMdDownload /></th>
             </tr>
           ))}
         </thead>
@@ -97,6 +134,7 @@ function NotaFiscal() {
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
+              <td><IoCloudDownloadSharp onClick={() => handleClick(row.original.infNFeId)} /></td>
             </tr>
           ))}
         </tbody>
