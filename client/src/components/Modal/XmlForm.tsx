@@ -33,7 +33,6 @@ function XmlModal(props: XmlModalProps) {
     // axios.post('http://localhost:8080/xml2', fd)
     xmlInstance.post('/xml', fd)
     .then((response) => {
-      console.log(response.data)
       if(response.data.sucess !== "false") {
         setInputFiles(false)
         props.onHide()

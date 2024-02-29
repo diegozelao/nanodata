@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 
 import { IoMdDownload } from "react-icons/io";
 import { IoCloudDownloadSharp } from "react-icons/io5";
+import { format } from "date-fns";
 import { apiInstance } from "../../services/apiInstance";
 
 type DataNfe = {
@@ -28,8 +29,6 @@ function NotaFiscal() {
     .then((response) => {
       console.log(response.data)
       setDataNfe(response.data)
-    }).catch((error) => {
-      console.log(error)
     })
     
   }, [])
@@ -66,6 +65,8 @@ function NotaFiscal() {
   const columns =  [
     {
       accessorKey: 'dhEmi',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      accessorFn: (row:any) => format(new Date(row.dhEmi), "dd/MM/yyyy"),
       header: 'Data Emissão'
     },
     {
