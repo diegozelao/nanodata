@@ -12,6 +12,7 @@ import org.dom4j.*;
 import org.dom4j.io.SAXReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.json.JsonParser;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -104,16 +105,35 @@ public class ApiController {
                 vTotTribVal,
                 vNFVal
             );
+
             try {
                 repository.save(notaFiscal);
             } catch (Exception e) {
-                ResponseEntity<String> response = ResponseEntity.ok(e.getMessage());
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, String> jsonData = new HashMap<>();
+                if (e.getCause().getMessage().contains("unique constraint")) {
+                    jsonData.put("mensagem", "ERROR: Ja existe uma Nota Fiscal com esse ID");
+                } else {
+                    jsonData.put("mensagem", e.getMessage());
+                }
+                jsonData.put("sucess", "false");
+                String jsonResponse = mapper.writeValueAsString(jsonData);
+                ResponseEntity<String> response = ResponseEntity.ok(jsonResponse);
                 return response.getBody();
             }
             try {
                 repositoryXml.save(new XmlInfo(infNFeId, file.getBytes()));
             } catch (Exception e) {
-                ResponseEntity<String> response = ResponseEntity.ok(e.getMessage());
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, String> jsonData = new HashMap<>();
+                if (e.getCause().getMessage().contains("unique constraint")) {
+                    jsonData.put("mensagem", "ERROR: Ja existe uma Nota Fiscal com esse ID");
+                } else {
+                    jsonData.put("mensagem", e.getMessage());
+                }
+                jsonData.put("sucess", "false");
+                String jsonResponse = mapper.writeValueAsString(jsonData);
+                ResponseEntity<String> response = ResponseEntity.ok(jsonResponse);
                 return response.getBody();
             }
         }
