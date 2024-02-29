@@ -1,20 +1,20 @@
 CREATE TABLE notafiscal (
     id SERIAL PRIMARY KEY,
-    infnfe_id NCHAR(200) UNIQUE,
-    dh_emi NCHAR(200),
-    nNF NCHAR(200),
-    cUF NCHAR(200),
-    emitCNPJ NCHAR(200),
-    emitx_fant NCHAR(200),
-    destCNPJ NCHAR(200),
-    destx_fant NCHAR(200),
+    infnfe_id VARCHAR(47) UNIQUE,
+    dh_emi VARCHAR(200),
+    nNF VARCHAR(14),
+    cUF VARCHAR(2),
+    emitCNPJ VARCHAR(14),
+    emitx_fant VARCHAR(200),
+    destCNPJ VARCHAR(14),
+    destx_fant VARCHAR(200),
     v_tot_trib DECIMAL(13,2) NOT NULL,
     vNF DECIMAL(13,2) NOT NULL
 );
 
 CREATE TABLE xml_info (
     id SERIAL PRIMARY KEY,
-    id_nfe NCHAR(200),
+    id_nfe VARCHAR(47),
     xml BYTEA
 );
 

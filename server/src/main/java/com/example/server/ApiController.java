@@ -44,6 +44,15 @@ public class ApiController {
         return ResponseEntity.ok("ok");
     }
 
+    @GetMapping("/notafiscal")
+    public ResponseEntity getAllNota() {
+        List<NotaFiscal> notaFiscals = repository.findAll();
+        return ResponseEntity.ok(notaFiscals);
+    }
+    @GetMapping("/xml/{idNfe}")
+    public ResponseEntity getXml(@PathVariable(name="idNfe") String idNfe) {
+        return ResponseEntity.ok(repositoryXml.findByIdNfe(idNfe));
+    }
     @PostMapping(value = "/xml", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public String processXml(@RequestParam("files") List<MultipartFile> files) throws IOException, DocumentException {
 
